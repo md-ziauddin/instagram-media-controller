@@ -833,7 +833,7 @@
 
   // Supported Extension Shortcut Keys
   const EXTENSION_KEYS = new Set([
-    'Space', 'KeyA', 'KeyD', 'ArrowLeft', 'ArrowRight',
+    'Space', 'KeyA', 'KeyD',
     'BracketLeft', 'BracketRight', 'KeyM', 'KeyS', 'KeyP'
   ]);
 
@@ -858,7 +858,6 @@
         break;
 
       case 'KeyA':
-      case 'ArrowLeft':
         e.preventDefault();
         e.stopPropagation();
         video.currentTime = Math.max(0, video.currentTime - 5);
@@ -867,7 +866,6 @@
         break;
 
       case 'KeyD':
-      case 'ArrowRight':
         e.preventDefault();
         e.stopPropagation();
         video.currentTime = Math.min(video.duration || 0, video.currentTime + 5);
