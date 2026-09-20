@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IG Media Controller</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo-area">
+        <div class="logo-badge">IG</div>
+        <div class="header-text">
+          <h1>Reels Controller</h1>
+          <span class="version">v1.0.0</span>
+        </div>
+      </div>
+      <span class="status-indicator active" title="Active on Instagram">Active</span>
+    </header>
+
+    <!-- Settings Section -->
+    <section class="section">
+      <div class="section-title">Playback Preferences</div>
+      <div class="setting-row">
+        <label for="defaultSpeed">Default Speed</label>
+        <select id="defaultSpeed" class="select-input">
+          <option value="0.5">0.5x</option>
+          <option value="0.75">0.75x</option>
+          <option value="1" selected>1.0x (Normal)</option>
+          <option value="1.25">1.25x</option>
+          <option value="1.5">1.5x</option>
+          <option value="1.75">1.75x</option>
+          <option value="2">2.0x</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- Keyboard Shortcuts -->
+    <section class="section">
+      <div class="section-title">Keyboard Shortcuts</div>
+      <div class="shortcuts-list">
+        <div class="shortcut-item">
+          <span class="shortcut-label">Play / Pause</span>
+          <span class="kbd"><kbd>Space</kbd> or <kbd>K</kbd></span>
+        </div>
+        <div class="shortcut-item">
+          <span class="shortcut-label">Seek ±5 seconds</span>
+          <span class="kbd"><kbd>←</kbd> / <kbd>→</kbd></span>
+        </div>
+        <div class="shortcut-item">
+          <span class="shortcut-label">Adjust Speed</span>
+          <span class="kbd"><kbd>[</kbd> / <kbd>]</kbd></span>
+        </div>
+        <div class="shortcut-item">
+          <span class="shortcut-label">Toggle Mute</span>
+          <span class="kbd"><kbd>M</kbd></span>
+        </div>
+        <div class="shortcut-item">
+          <span class="shortcut-label">Download Video</span>
+          <span class="kbd"><kbd>D</kbd></span>
+        </div>
+        <div class="shortcut-item">
+          <span class="shortcut-label">Picture in Picture</span>
+          <span class="kbd"><kbd>P</kbd></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer Action -->
+    <footer class="footer">
+      <a href="https://www.instagram.com/reels/" target="_blank" class="btn-primary">
+        Open Instagram Reels
+      </a>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

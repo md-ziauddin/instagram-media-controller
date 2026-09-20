@@ -1,0 +1,336 @@
+/* =========================================================
+   Instagram Reels & Video Media Controller - Styles
+   ========================================================= */
+
+/* Top-level Root Controller attached directly to document.body */
+.ig-media-controller {
+  position: fixed !important;
+  z-index: 2147483647 !important;
+  pointer-events: auto !important;
+  box-sizing: border-box !important;
+  background: rgba(18, 18, 18, 0.9) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 12px !important;
+  padding: 8px 12px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  transition: opacity 0.25s ease, transform 0.1s ease-out !important;
+  will-change: transform, opacity !important;
+}
+
+/* Hidden state when no video in view */
+.ig-media-controller.ig-hidden {
+  display: none !important;
+}
+
+/* Idle state during continuous playback - semi-transparent but fully interactive */
+.ig-media-controller.ig-idle {
+  opacity: 0.15 !important;
+}
+
+.ig-media-controller:hover,
+.ig-media-controller.ig-paused,
+.ig-media-controller.ig-seeking,
+.ig-media-controller.ig-menu-open {
+  opacity: 1 !important;
+}
+
+/* Scrubber Timeline Row */
+.ig-timeline-container {
+  position: relative !important;
+  width: 100% !important;
+  height: 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+}
+
+.ig-timeline-track {
+  position: relative !important;
+  width: 100% !important;
+  height: 4px !important;
+  background: rgba(255, 255, 255, 0.3) !important;
+  border-radius: 4px !important;
+  overflow: visible !important;
+  transition: height 0.15s ease !important;
+  pointer-events: none !important;
+}
+
+.ig-timeline-container:hover .ig-timeline-track {
+  height: 6px !important;
+}
+
+.ig-timeline-buffer {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  height: 100% !important;
+  background: rgba(255, 255, 255, 0.45) !important;
+  border-radius: 4px !important;
+  pointer-events: none !important;
+  width: 0% !important;
+}
+
+.ig-timeline-progress {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  height: 100% !important;
+  background: linear-gradient(90deg, #fd1d1d, #e1306c) !important;
+  border-radius: 4px !important;
+  pointer-events: none !important;
+  width: 0% !important;
+}
+
+.ig-timeline-thumb {
+  position: absolute !important;
+  top: 50% !important;
+  left: 0%;
+  transform: translate(-50%, -50%) !important;
+  width: 12px !important;
+  height: 12px !important;
+  background: #ffffff !important;
+  border-radius: 50% !important;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.6) !important;
+  pointer-events: none !important;
+  transition: transform 0.12s ease !important;
+}
+
+.ig-timeline-container:hover .ig-timeline-thumb,
+.ig-media-controller.ig-seeking .ig-timeline-thumb {
+  transform: translate(-50%, -50%) scale(1.35) !important;
+}
+
+/* Hover Time Tooltip */
+.ig-time-tooltip {
+  position: absolute !important;
+  bottom: 24px !important;
+  left: 0 !important;
+  transform: translateX(-50%) !important;
+  background: rgba(0, 0, 0, 0.9) !important;
+  color: #fff !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  padding: 3px 6px !important;
+  border-radius: 4px !important;
+  pointer-events: none !important;
+  display: none !important;
+  white-space: nowrap !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+  z-index: 10 !important;
+}
+
+.ig-timeline-container:hover .ig-time-tooltip {
+  display: block !important;
+}
+
+/* Control Buttons Row */
+.ig-controls-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  gap: 8px !important;
+}
+
+.ig-controls-left,
+.ig-controls-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+}
+
+/* Buttons */
+.ig-btn {
+  background: none !important;
+  border: none !important;
+  padding: 6px !important;
+  margin: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #f0f0f0 !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  border-radius: 6px !important;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease !important;
+  font-size: 12px !important;
+  line-height: 1 !important;
+}
+
+.ig-btn:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
+}
+
+.ig-btn:active {
+  transform: scale(0.92) !important;
+}
+
+.ig-btn svg {
+  width: 18px !important;
+  height: 18px !important;
+  fill: currentColor !important;
+  pointer-events: none !important;
+}
+
+/* Time Indicator Text */
+.ig-time-display {
+  color: #dbdbdb !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.3px !important;
+  margin-left: 2px !important;
+  white-space: nowrap !important;
+  pointer-events: none !important;
+}
+
+/* Speed and Quality Badge Buttons */
+.ig-badge-btn {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  padding: 4px 8px !important;
+  border-radius: 5px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: #efefef !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  position: relative !important;
+  transition: background 0.15s ease, border-color 0.15s ease !important;
+}
+
+.ig-badge-btn:hover {
+  background: rgba(255, 255, 255, 0.24) !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  color: #ffffff !important;
+}
+
+/* Popover Menus (Speed, Quality) */
+.ig-popover-menu {
+  position: absolute !important;
+  bottom: calc(100% + 8px) !important;
+  right: 0 !important;
+  background: rgba(24, 24, 24, 0.96) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 8px !important;
+  padding: 4px !important;
+  display: none !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  z-index: 2147483647 !important;
+  min-width: 80px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
+  pointer-events: auto !important;
+}
+
+.ig-popover-menu.ig-show {
+  display: flex !important;
+}
+
+.ig-popover-item {
+  background: none !important;
+  border: none !important;
+  padding: 6px 10px !important;
+  border-radius: 4px !important;
+  color: #ccc !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  text-align: left !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  transition: background 0.12s ease, color 0.12s ease !important;
+  white-space: nowrap !important;
+}
+
+.ig-popover-item:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+  color: #fff !important;
+}
+
+.ig-popover-item.ig-selected {
+  color: #e1306c !important;
+  font-weight: 700 !important;
+}
+
+/* Download Loading Spinner */
+.ig-btn-download.ig-loading svg {
+  animation: ig-spin 0.8s linear infinite !important;
+}
+
+@keyframes ig-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Toast Notifications */
+.ig-toast-container {
+  position: fixed !important;
+  top: 24px !important;
+  right: 24px !important;
+  z-index: 2147483647 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  pointer-events: none !important;
+}
+
+.ig-toast {
+  background: rgba(28, 28, 30, 0.96) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 8px !important;
+  padding: 10px 16px !important;
+  font-size: 13px !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  animation: ig-toast-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  pointer-events: auto !important;
+}
+
+.ig-toast.ig-toast-success {
+  border-left: 3px solid #2ecc71 !important;
+}
+
+.ig-toast.ig-toast-error {
+  border-left: 3px solid #e74c3c !important;
+}
+
+@keyframes ig-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes ig-toast-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+}
