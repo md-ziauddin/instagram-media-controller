@@ -24,10 +24,10 @@ Take full control of your Instagram video watching experience. By default, Insta
 - 🖼️ **Picture-in-Picture (PiP)**: Pop videos out into a floating window to multitask across other tabs.
 - ⌨️ **Keyboard Hotkeys**:
   - `Space`: Play / Pause
-  - `←` / `→`: Seek backward / forward 5 seconds
+  - `A` / `D` (or `←` / `→`): Seek backward / forward 5 seconds
   - `[` / `]`: Decrease / increase playback speed
   - `M`: Toggle mute
-  - `D`: Download current video
+  - `S`: Download current video
   - `P`: Toggle Picture-in-Picture
 
 ---

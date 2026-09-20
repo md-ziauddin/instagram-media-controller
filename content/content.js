@@ -196,7 +196,7 @@
             ${ICONS.pip}
           </button>
 
-          <button class="ig-btn ig-btn-download" title="Download Reel (D)">
+          <button class="ig-btn ig-btn-download" title="Download Reel (S)">
             ${ICONS.download}
           </button>
         </div>
@@ -833,8 +833,8 @@
 
   // Supported Extension Shortcut Keys
   const EXTENSION_KEYS = new Set([
-    'Space', 'ArrowLeft', 'ArrowRight',
-    'BracketLeft', 'BracketRight', 'KeyM', 'KeyD', 'KeyP'
+    'Space', 'KeyA', 'KeyD', 'ArrowLeft', 'ArrowRight',
+    'BracketLeft', 'BracketRight', 'KeyM', 'KeyS', 'KeyP'
   ]);
 
   // Keyboard Shortcuts Handler
@@ -857,15 +857,19 @@
         togglePlay();
         break;
 
+      case 'KeyA':
       case 'ArrowLeft':
         e.preventDefault();
+        e.stopPropagation();
         video.currentTime = Math.max(0, video.currentTime - 5);
         updateProgress();
         showToast(`-5s (${formatTime(video.currentTime)})`);
         break;
 
+      case 'KeyD':
       case 'ArrowRight':
         e.preventDefault();
+        e.stopPropagation();
         video.currentTime = Math.min(video.duration || 0, video.currentTime + 5);
         updateProgress();
         showToast(`+5s (${formatTime(video.currentTime)})`);
@@ -894,8 +898,9 @@
         toggleMute();
         break;
 
-      case 'KeyD':
+      case 'KeyS':
         e.preventDefault();
+        e.stopPropagation();
         downloadVideo();
         break;
 

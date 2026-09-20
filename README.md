@@ -14,10 +14,10 @@ A Manifest V3 Chrome Extension providing media controls, timeline seeking, playb
 - 🖼️ **Picture-in-Picture**: Watch reels in a floating window while browsing other tabs.
 - ⌨️ **Keyboard Shortcuts**:
   - `Space`: Play / Pause
-  - `←` / `→`: Seek backward / forward 5 seconds
+  - `A` / `D` (or `←` / `→`): Seek backward / forward 5 seconds
   - `[` / `]`: Decrease / increase playback speed
   - `M`: Toggle mute
-  - `D`: Download current reel
+  - `S`: Download current reel
   - `P`: Picture-in-Picture
 
 ---
