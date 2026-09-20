@@ -2,6 +2,7 @@
  * Instagram Reels & Video Controller - Page Script (MAIN World)
  * Intercepts network responses (fetch/XHR), inspects React Fiber,
  * and caches full-resolution video_versions for instant downloading.
+ * Fully non-blocking to prevent any interference with native scrolling/snapping.
  */
 (() => {
   'use strict';
@@ -9,9 +10,9 @@
   // In-memory cache for media metadata indexed by shortcode and id
   const mediaCache = new Map();
 
-  // Recursively search any JS object for video_versions or media items
+  // Recursively search JS object for video_versions with strict depth and length caps
   function harvestMediaObjects(obj, depth = 0) {
-    if (!obj || typeof obj !== 'object' || depth > 20) return;
+    if (!obj || typeof obj !== 'object' || depth > 8) return;
 
     // Check if this object is a media item
     if (obj.video_versions && Array.isArray(obj.video_versions) && obj.video_versions.length > 0) {
@@ -28,13 +29,17 @@
       }
     }
 
-    // Traverse arrays and nested objects
+    // Traverse arrays and nested objects with strict bounding
     if (Array.isArray(obj)) {
-      for (const item of obj) {
-        harvestMediaObjects(item, depth + 1);
+      const len = Math.min(obj.length, 40);
+      for (let i = 0; i < len; i++) {
+        harvestMediaObjects(obj[i], depth + 1);
       }
     } else {
-      for (const key of Object.keys(obj)) {
+      const keys = Object.keys(obj);
+      const len = Math.min(keys.length, 30);
+      for (let i = 0; i < len; i++) {
+        const key = keys[i];
         if (key === 'video_versions') continue;
         harvestMediaObjects(obj[key], depth + 1);
       }
@@ -80,35 +85,37 @@
     };
   }
 
-  // Intercept window.fetch to capture video_versions from GraphQL and clips endpoints
+  // Intercept window.fetch ONLY for JSON API endpoints
+  // NEVER intercept binary media segments or general instagram.com requests
   const originalFetch = window.fetch;
   window.fetch = async function (...args) {
     const response = await originalFetch.apply(this, args);
     try {
       const url = typeof args[0] === 'string' ? args[0] : (args[0]?.url || '');
-      if (
-        url.includes('/graphql/query') ||
-        url.includes('/api/v1/') ||
-        url.includes('/clips/') ||
-        url.includes('instagram.com')
-      ) {
+      const isApi = url.includes('/graphql/query') || url.includes('/api/v1/clips/') || url.includes('/api/v1/media/');
+      const contentType = response.headers?.get('content-type') || '';
+
+      if (isApi && contentType.includes('application/json')) {
         const clone = response.clone();
         clone.json().then(data => {
-          harvestMediaObjects(data);
+          setTimeout(() => harvestMediaObjects(data), 0);
         }).catch(() => {});
       }
     } catch (e) {}
     return response;
   };
 
-  // Intercept XMLHttpRequest
+  // Intercept XMLHttpRequest for API endpoints only
   const originalXHR = window.XMLHttpRequest.prototype.open;
   window.XMLHttpRequest.prototype.open = function (method, url, ...rest) {
     this.addEventListener('load', function () {
       try {
-        if (typeof url === 'string' && (url.includes('/graphql/query') || url.includes('/api/v1/'))) {
-          const data = JSON.parse(this.responseText);
-          harvestMediaObjects(data);
+        if (typeof url === 'string' && (url.includes('/graphql/query') || url.includes('/api/v1/clips/'))) {
+          const contentType = this.getResponseHeader('content-type') || '';
+          if (contentType.includes('application/json')) {
+            const data = JSON.parse(this.responseText);
+            setTimeout(() => harvestMediaObjects(data), 0);
+          }
         }
       } catch (e) {}
     });
@@ -122,21 +129,19 @@
     return key ? element[key] : null;
   }
 
-  function searchFiberForMedia(fiber, maxDepth = 40) {
+  function searchFiberForMedia(fiber, maxDepth = 25) {
     if (!fiber || maxDepth <= 0) return null;
     let current = fiber;
     let depth = 0;
 
     while (current && depth < maxDepth) {
       if (current.memoizedProps) {
-        harvestMediaObjects(current.memoizedProps);
-        const media = current.memoizedProps.media || current.memoizedProps.post || current.memoizedProps.item;
+        const p = current.memoizedProps;
+        const media = p.media || p.post || p.item || p.clip || (p.video_versions ? p : null);
         if (media && (media.video_versions || media.video_url)) {
-          return parseMediaItem(media);
+          const parsed = parseMediaItem(media);
+          if (parsed) return parsed;
         }
-      }
-      if (current.memoizedState) {
-        harvestMediaObjects(current.memoizedState);
       }
       current = current.return;
       depth++;
@@ -164,7 +169,7 @@
     if (!event.data || event.data.source !== 'IG_CONTROLLER_CONTENT') return;
 
     if (event.data.action === 'GET_VIDEO_METADATA') {
-      const { requestId, shortcode, videoSelector } = event.data;
+      const { requestId, shortcode } = event.data;
 
       let result = null;
 
@@ -181,9 +186,30 @@
         }
       }
 
-      // 3. Check React Fiber on the video or its ancestors
-      if (!result && videoSelector) {
-        const videoEl = document.querySelector(videoSelector);
+      // 3. Check React Fiber on center screen video or matched container
+      if (!result) {
+        let videoEl = null;
+        if (shortcode) {
+          const link = document.querySelector(`a[href*="/reel/${shortcode}"], a[href*="/p/${shortcode}"]`);
+          if (link) {
+            const container = link.closest('article') || link.closest('div[role="presentation"]') || link.parentElement?.parentElement;
+            if (container) videoEl = container.querySelector('video');
+          }
+        }
+        if (!videoEl) {
+          const videos = Array.from(document.querySelectorAll('video'));
+          const centerY = window.innerHeight / 2;
+          let bestDist = Infinity;
+          for (const v of videos) {
+            if (!v.isConnected) continue;
+            const r = v.getBoundingClientRect();
+            const d = Math.abs((r.top + r.bottom) / 2 - centerY);
+            if (d < bestDist) {
+              bestDist = d;
+              videoEl = v;
+            }
+          }
+        }
         if (videoEl) {
           const fiber = getReactFiber(videoEl) || getReactFiber(videoEl.closest('article')) || getReactFiber(videoEl.parentElement);
           result = searchFiberForMedia(fiber);
@@ -209,7 +235,7 @@
     }
   });
 
-  // Initial scan
-  scanScriptTags();
-  console.log('[IG Media Controller] Enhanced page script active in MAIN world.');
+  // Initial scan deferred
+  setTimeout(scanScriptTags, 500);
+  console.log('[IG Media Controller] Non-blocking page script active in MAIN world.');
 })();

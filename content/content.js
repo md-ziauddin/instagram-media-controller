@@ -78,15 +78,12 @@
       }, 900);
 
       const shortcode = getShortcodeForVideo(video);
-      const vidId = 'ig_vid_' + Math.random().toString(36).substr(2, 9);
-      video.setAttribute('data-ig-vid-id', vidId);
 
       window.postMessage({
         source: 'IG_CONTROLLER_CONTENT',
         action: 'GET_VIDEO_METADATA',
         requestId,
-        shortcode,
-        videoSelector: `video[data-ig-vid-id="${vidId}"]`
+        shortcode
       }, '*');
     });
   }
@@ -676,13 +673,16 @@
 
   function onVideoPlay() { updatePlayState(); }
   function onVideoPause() { updatePlayState(); }
-  function onVideoTimeUpdate() { updateProgress(); syncPosition(); }
+  function onVideoTimeUpdate() {
+    if (isScrolling) return;
+    updateProgress();
+  }
   function onVideoVolumeChange() { updateVolumeState(); }
   function onVideoProgress() { updateBuffer(); }
   function onVideoLoadedMetadata() {
     updateProgress();
     updateQualityBadge();
-    syncPosition();
+    if (!isScrolling) syncPosition();
   }
 
   // Set the current active video
@@ -712,14 +712,16 @@
     activeMetadata = await requestVideoMetadata(video);
     updateQualityBadge();
 
-    syncPosition();
+    if (!isScrolling) {
+      syncPosition();
+    }
   }
 
   // Position controller directly over the active video
   function syncPosition() {
-    if (!ui.controller) return;
+    if (!ui.controller || isScrolling) return;
 
-    const video = getTargetVideo();
+    const video = activeVideo;
     if (!video || !document.body.contains(video)) {
       ui.controller.classList.add('ig-hidden');
       return;
@@ -749,6 +751,7 @@
    * Determines which video is centered in the user's viewport, rejecting off-screen preloading reels.
    */
   function getActiveScreenVideo() {
+    if (isScrolling) return null;
     const videos = Array.from(document.querySelectorAll('video'));
     if (videos.length === 0) return null;
 
@@ -757,17 +760,14 @@
     let minDistance = Infinity;
 
     for (const v of videos) {
-      // Must be connected to DOM and have dimensions
       if (!v.isConnected) continue;
       const r = v.getBoundingClientRect();
       if (r.width < 100 || r.height < 100) continue;
 
-      // The active reel MUST cover or be closest to the vertical center of the viewport
-      // Preloaded reels positioned below or above will fail this check
       const vCenter = (r.top + r.bottom) / 2;
       const dist = Math.abs(vCenter - centerY);
 
-      // Verify that the video is actually in view (top < 75% height, bottom > 25% height)
+      // Verify that the video is actually covering the viewport center region
       if (r.top < window.innerHeight * 0.8 && r.bottom > window.innerHeight * 0.2) {
         if (dist < minDistance) {
           minDistance = dist;
@@ -780,6 +780,7 @@
   }
 
   function getTargetVideo() {
+    if (isScrolling && activeVideo) return activeVideo;
     const centerVideo = getActiveScreenVideo();
     if (centerVideo) {
       if (centerVideo !== activeVideo) {
@@ -791,6 +792,7 @@
   }
 
   function updateActiveVideoFromDOM() {
+    if (isScrolling) return;
     const best = getActiveScreenVideo();
     if (best) {
       setActiveVideo(best);
@@ -801,42 +803,45 @@
 
   // Global capture listener for timeupdate across ANY video element
   document.addEventListener('timeupdate', (e) => {
-    if (e.target && e.target.tagName === 'VIDEO') {
-      const vid = e.target;
-      // If activeVideo is not set or this video is the centered one, update progress
-      if (vid === activeVideo) {
-        updateProgress();
-      } else {
-        const center = getActiveScreenVideo();
-        if (center && center !== activeVideo) {
-          setActiveVideo(center);
-        }
-      }
+    if (isScrolling) return;
+    if (e.target && e.target.tagName === 'VIDEO' && e.target === activeVideo) {
+      updateProgress();
     }
   }, true);
 
   // Global capture listener for play events (guarded by Screen Center check!)
   document.addEventListener('play', (e) => {
+    if (isScrolling) return;
     if (e.target && e.target.tagName === 'VIDEO') {
-      // IMPORTANT: Only switch activeVideo if the video playing is the one in the center of the screen!
-      // This prevents off-screen preloading videos from hijacking controls!
-      const center = getActiveScreenVideo();
-      if (center && center === e.target) {
-        setActiveVideo(center);
-      }
+      setTimeout(() => {
+        if (isScrolling) return;
+        const center = getActiveScreenVideo();
+        if (center && center === e.target) {
+          setActiveVideo(center);
+        }
+      }, 60);
     }
   }, true);
 
-  // Fallback progress interval: keeps the scrubber moving smoothly at all times
+  // Fallback progress interval: keeps the scrubber moving smoothly without forcing reflows
   setInterval(() => {
-    const vid = getTargetVideo();
-    if (vid && !vid.paused && !isSeeking) {
+    if (isScrolling) return;
+    if (activeVideo && !activeVideo.paused && !isSeeking) {
       updateProgress();
     }
-  }, 200);
+  }, 250);
+
+  // Supported Extension Shortcut Keys
+  const EXTENSION_KEYS = new Set([
+    'Space', 'KeyK', 'ArrowLeft', 'ArrowRight',
+    'BracketLeft', 'BracketRight', 'KeyM', 'KeyD', 'KeyP'
+  ]);
 
   // Keyboard Shortcuts Handler
   window.addEventListener('keydown', (e) => {
+    // Only handle extension shortcuts; NEVER intercept native Instagram navigation (ArrowDown/ArrowUp)
+    if (!EXTENSION_KEYS.has(e.code)) return;
+
     const target = e.target;
     if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
       return;
@@ -901,20 +906,57 @@
     }
   });
 
-  // Track window scroll and resize
-  window.addEventListener('scroll', () => {
-    updateActiveVideoFromDOM();
-    syncPosition();
-  }, { passive: true });
+  // Track window and container scrolling cleanly
+  let isScrolling = false;
+  let scrollSettleTimer = null;
+
+  function onScroll() {
+    isScrolling = true;
+    // Hide controller during scroll transitions so it never interferes with scroll snapping
+    if (ui.controller && !ui.controller.classList.contains('ig-hidden')) {
+      ui.controller.classList.add('ig-hidden');
+    }
+
+    clearTimeout(scrollSettleTimer);
+    scrollSettleTimer = setTimeout(() => {
+      isScrolling = false;
+      // Scroll has completely settled and snapped
+      updateActiveVideoFromDOM();
+      syncPosition();
+    }, 160);
+  }
+
+  window.addEventListener('scroll', onScroll, { capture: true, passive: true });
 
   window.addEventListener('resize', () => {
-    syncPosition();
+    if (!isScrolling) syncPosition();
   }, { passive: true });
 
-  // DOM MutationObserver to detect newly loaded reels
-  const observer = new MutationObserver(() => {
-    buildRootController();
-    updateActiveVideoFromDOM();
+  // Debounced MutationObserver to detect newly loaded reels without layout thrashing
+  let domUpdateTimer = null;
+  function scheduleDOMUpdate(delay = 180) {
+    if (isScrolling) return;
+    clearTimeout(domUpdateTimer);
+    domUpdateTimer = setTimeout(() => {
+      if (isScrolling) return;
+      buildRootController();
+      updateActiveVideoFromDOM();
+      syncPosition();
+    }, delay);
+  }
+
+  const observer = new MutationObserver((mutations) => {
+    if (isScrolling) return;
+    let hasStructuralChange = false;
+    for (const m of mutations) {
+      if (m.addedNodes.length > 0 || m.removedNodes.length > 0) {
+        hasStructuralChange = true;
+        break;
+      }
+    }
+    if (hasStructuralChange) {
+      scheduleDOMUpdate(220);
+    }
   });
 
   observer.observe(document.body || document.documentElement, {
