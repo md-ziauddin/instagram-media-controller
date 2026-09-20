@@ -833,7 +833,7 @@
 
   // Supported Extension Shortcut Keys
   const EXTENSION_KEYS = new Set([
-    'Space', 'KeyK', 'ArrowLeft', 'ArrowRight',
+    'Space', 'ArrowLeft', 'ArrowRight',
     'BracketLeft', 'BracketRight', 'KeyM', 'KeyD', 'KeyP'
   ]);
 
@@ -852,8 +852,8 @@
 
     switch (e.code) {
       case 'Space':
-      case 'KeyK':
         e.preventDefault();
+        e.stopPropagation();
         togglePlay();
         break;
 
@@ -904,7 +904,7 @@
         togglePiP();
         break;
     }
-  });
+  }, true);
 
   // Track window and container scrolling cleanly
   let isScrolling = false;

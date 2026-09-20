@@ -23,7 +23,7 @@ Take full control of your Instagram video watching experience. By default, Insta
 - ⬇️ **One-Click HD Video Downloader**: Download any Instagram Reel or video post in the highest available MP4 resolution directly to your computer.
 - 🖼️ **Picture-in-Picture (PiP)**: Pop videos out into a floating window to multitask across other tabs.
 - ⌨️ **Keyboard Hotkeys**:
-  - `Space` / `K`: Play / Pause
+  - `Space`: Play / Pause
   - `←` / `→`: Seek backward / forward 5 seconds
   - `[` / `]`: Decrease / increase playback speed
   - `M`: Toggle mute

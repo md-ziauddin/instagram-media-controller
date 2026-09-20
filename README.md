@@ -13,7 +13,7 @@ A Manifest V3 Chrome Extension providing media controls, timeline seeking, playb
 - ⬇️ **HD Video Downloader**: Extracts highest-bitrate MP4 URLs from post metadata and saves videos locally via `chrome.downloads`.
 - 🖼️ **Picture-in-Picture**: Watch reels in a floating window while browsing other tabs.
 - ⌨️ **Keyboard Shortcuts**:
-  - `Space` or `K`: Play / Pause
+  - `Space`: Play / Pause
   - `←` / `→`: Seek backward / forward 5 seconds
   - `[` / `]`: Decrease / increase playback speed
   - `M`: Toggle mute
